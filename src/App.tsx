@@ -20,7 +20,7 @@ import {
   ArrowLeft, Zap, Check, History, Target, Shield, Camera, Edit3, Trash2, Plus,
   BrainCircuit, Circle, Send, Skull, Trophy, FolderOpen, MoveRight,
   Sparkles, Activity, GripVertical, Moon, Image as ImageIcon, Folder,
-  ShieldAlert, Mic, Clock
+  ShieldAlert, Mic, Clock, Volume2, Pause, Play, Square, RotateCcw, AlertCircle
 } from "lucide-react";
 
 declare const __initial_auth_token: any;
@@ -341,6 +341,7 @@ interface KrishnaMessage {
   role: 'user' | 'model';
   text: string;
   timestamp: string;
+  voiceText?: string;
 }
 
 interface KrishnaConversation {
@@ -355,6 +356,8 @@ interface KrishnaState {
   conversations: KrishnaConversation[];
   activeConversationId: string | null;
 }
+
+type KrishnaVoiceStatus = "idle" | "loading" | "playing" | "paused" | "error";
 
 // ==========================================
 // CUSTOM HOOKS
@@ -597,7 +600,16 @@ export default function App() {
   const [editingConvId, setEditingConvId] = useState<string | null>(null);
   const [editTitleText, setEditTitleText] = useState("");
   const [isKrishnaVoiceListening, setIsKrishnaVoiceListening] = useState(false);
+  const [krishnaVoice, setKrishnaVoice] = useState<{
+    messageId: string | null;
+    status: KrishnaVoiceStatus;
+    error?: string;
+  }>({ messageId: null, status: "idle" });
+  const [krishnaVoiceScripts, setKrishnaVoiceScripts] = useState<Record<string, string>>({});
   const krishnaChatEndRef = useRef<HTMLDivElement | null>(null);
+  const krishnaVoiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const krishnaVoiceAudioUrlRef = useRef<string | null>(null);
+  const krishnaVoiceMessageRef = useRef<string | null>(null);
 
   const t = (THEMES as any)[profile.activeTheme] || THEMES.brutalist;
 
@@ -1244,9 +1256,136 @@ export default function App() {
     const todayCompleted = Object.values(todayTasks).filter((v: any) => v === "X").length;
     const activePerks = (profile.inventory || []).filter((i: any) => i.status === "active").map((i: any) => i.name).join(", ") || "None";
 
-    const systemPrompt = `You are a wise Habit Coach for ${profile.name}.
-    Status: ${profile.stars} Stars, Perfect Streak: ${streaks.perfect}, Study Streak: ${streaks.study}, Progress: ${todayCompleted}/${(profile.customTasks || DEFAULT_TASKS).length}. Perks: ${activePerks}.
-    Keep it impactful, firm yet caring.`;
+    // ==========================================
+    // COMPREHENSIVE DATA FEED FOR AI COACH
+    // ==========================================
+
+    // 1. Calculate Monthly Statistics
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthlyDates = Object.keys(trackerData).filter(dateStr => {
+      const [year, month] = dateStr.split('-').map(Number);
+      return year === currentYear && month - 1 === currentMonth;
+    });
+
+    let monthlyStreakBreaks = 0;
+    let monthlyPerfectDays = 0;
+    let monthlyFailedDays = 0;
+    let monthlyTotalTasks = 0;
+    let monthlyCompletedTasks = 0;
+    const monthlyDaySummaries: string[] = [];
+
+    monthlyDates.forEach(dateStr => {
+      const dayData = trackerData[dateStr];
+      if (dayData && dayData.tasks) {
+        const tasks = Object.values(dayData.tasks);
+        const xCount = tasks.filter((v: any) => v === "X").length;
+        const oCount = tasks.filter((v: any) => v === "O").length;
+        const totalTasks = tasks.length;
+
+        monthlyTotalTasks += totalTasks;
+        monthlyCompletedTasks += xCount;
+
+        if (xCount === totalTasks) monthlyPerfectDays++;
+        if (oCount > 0) {
+          monthlyFailedDays++;
+          monthlyStreakBreaks++;
+        }
+
+        if (dayData.summary) {
+          monthlyDaySummaries.push(`${dateStr}: ${dayData.summary}`);
+        }
+      }
+    });
+
+    const monthlyCompletionRate = monthlyTotalTasks > 0 ? Math.round((monthlyCompletedTasks / monthlyTotalTasks) * 100) : 0;
+
+    // 2. Reward Shop Purchase History
+    const purchaseHistory = (profile.inventory || []).map((item: any) =>
+      `${item.name} (${item.status}) - Purchased: ${new Date(parseInt(item.instanceId)).toLocaleDateString()}`
+    ).join(", ") || "No purchases yet";
+
+    // 3. Recent Habit History (Last 7 days)
+    const last7Days: string[] = [];
+    let tempDate = new Date(todayStr + "T00:00:00");
+    for (let i = 0; i < 7; i++) {
+      const dateStr = formatDate(tempDate);
+      const dayData = trackerData[dateStr];
+      if (dayData && dayData.tasks) {
+        const xCount = Object.values(dayData.tasks).filter((v: any) => v === "X").length;
+        const totalCount = Object.keys(dayData.tasks).length;
+        last7Days.push(`${dateStr}: ${xCount}/${totalCount} tasks completed`);
+      }
+      tempDate.setDate(tempDate.getDate() - 1);
+    }
+
+    // 4. Second Brain Summary
+    const brainSummary = `
+    📚 Study Topics: ${brain.stagingTopics?.length || 0} staging, ${brain.studyTopics?.length || 0} active, ${brain.masteredTopics?.length || 0} mastered
+    💡 Wisdom Notes: ${brain.wisdomNotes?.length || 0} quick thoughts, ${brain.vaultNotes?.length || 0} vault notes
+    🎯 Custom Missions: ${brain.customMissions?.length || 0} ongoing
+    ⏰ Global Deadline: ${brain.globalDeadlineDays || 30} days remaining`;
+
+    // 5. Ongoing Plans (Active Goals/Resources)
+    const ongoingPlans: string[] = [];
+    if (brain.customMissions && brain.customMissions.length > 0) {
+      brain.customMissions.forEach((mission: any) => {
+        ongoingPlans.push(`${mission.title}: ${mission.desc || 'No description'}`);
+      });
+    }
+
+    // 6. Current Tasks List
+    const currentTasksList = (profile.customTasks || DEFAULT_TASKS).map((task: any) =>
+      `${task.title} (${task.desc})${task.isLocked ? ' [LOCKED]' : ''}`
+    ).join(", ");
+
+    const systemPrompt = `You are an advanced AI Habit Coach and Personal Analytics Assistant for ${profile.name}.
+
+🎯 CURRENT STATUS:
+- Stars: ${profile.stars} ⭐
+- Perfect Streak: ${streaks.perfect} days 🔥
+- Study Streak: ${streaks.study} days 📚
+- Trigger Control Streak: ${streaks.trigger} days 🎯
+- Title: ${playerTitle}
+- Today's Progress: ${todayCompleted}/${(profile.customTasks || DEFAULT_TASKS).length} tasks completed
+- Active Perks: ${activePerks}
+
+📊 THIS MONTH'S ANALYTICS (${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}):
+- Days Tracked: ${monthlyDates.length}
+- Perfect Days: ${monthlyPerfectDays} 🏆
+- Streak Breaks: ${monthlyStreakBreaks} ❌
+- Failed Days: ${monthlyFailedDays}
+- Overall Completion Rate: ${monthlyCompletionRate}%
+- Total Tasks: ${monthlyCompletedTasks}/${monthlyTotalTasks}
+
+📅 LAST 7 DAYS PERFORMANCE:
+${last7Days.join('\n')}
+
+🛒 REWARD SHOP HISTORY:
+${purchaseHistory}
+
+📝 RECENT DAY SUMMARIES:
+${monthlyDaySummaries.slice(-5).join('\n') || 'No summaries recorded yet'}
+
+🧠 SECOND BRAIN STATUS:
+${brainSummary}
+
+🎯 ONGOING PLANS/MISSIONS:
+${ongoingPlans.length > 0 ? ongoingPlans.join('\n') : 'No active missions'}
+
+📋 CURRENT HABIT TASKS:
+${currentTasksList}
+
+🔥 YOUR ROLE:
+You have COMPLETE access to ${profile.name}'s entire app data. You can:
+1. Answer specific queries about streaks, breaks, stats, and patterns
+2. Provide monthly/weekly summaries based on actual day logs
+3. Track reward purchases and active perks
+4. Monitor Second Brain progress (study topics, notes, missions)
+5. Give data-driven insights and personalized recommendations
+6. Identify weak patterns and suggest improvements
+
+Be analytical, precise, and data-driven. When asked about specific numbers (streak breaks, purchases, completion rates), give EXACT answers based on the data above. Keep responses impactful, firm yet caring, like a tough but supportive coach who knows every detail of their athlete's performance.`;
 
     // Build properly alternating history without error notices or leading assistant messages
     const formattedHistory: any[] = [];
@@ -2252,7 +2391,7 @@ CORE MANNERISMS & ESSENCE:
   // ==========================================
   const renderBrainDashboard = () => {
     const remainingChapters = brain.stagingTopics.length;
-    const pace = remainingChapters > 0 ? (brain.globalDeadlineDays / remainingChapters).toFixed(1) : 0;
+    const pace = remainingChapters > 0 ? brain.globalDeadlineDays / remainingChapters : 0;
 
     let paceStatus = { text: "ON TRACK", color: t.textMain };
     if (pace < 1 && remainingChapters > 0) paceStatus = { text: "DANGER", color: "text-red-500" };
@@ -2972,6 +3111,204 @@ CORE MANNERISMS & ESSENCE:
     }
   };
 
+  // The free Edge neural voice layer first creates a longer spoken explanation
+  // and then turns it into Hindi/Hinglish audio on the API server.
+  const getKrishnaNarrationText = (text: string) =>
+    text
+      .replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, ""))
+      .replace(/[*_`#>]/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+  const prepareKrishnaNarration = async (message: KrishnaMessage) => {
+    const cachedScript = message.voiceText || krishnaVoiceScripts[message.id];
+    if (cachedScript) return getKrishnaNarrationText(cachedScript);
+
+    const writtenReply = getKrishnaNarrationText(message.text);
+    if (!profile.geminiKey || writtenReply.length < 80) {
+      return writtenReply;
+    }
+
+    try {
+      const expandedReply = await callGeminiApi(
+        profile.geminiKey,
+        [{
+          role: "user",
+          parts: [{
+            text: `Create a spoken narration for this Krishna guidance:\n\n${writtenReply}`
+          }]
+        }],
+        `You are preparing the voice companion version of a written Shri Krishna guidance reply.
+Keep every important idea, instruction, shloka reference, and emotional nuance from the written answer.
+Expand it into a gentle, clear, human-sounding 2 to 4 paragraph explanation for listening.
+Use natural Hindi/Hinglish matching the reply's language. Add soft connective explanations and practical meaning,
+but do not invent new claims or change the advice. Do not use headings, bullet points, markdown, emojis,
+stage directions, or meta commentary. Write only the narration script, with comfortable sentence lengths and
+natural pauses created by punctuation.`,
+        false
+      );
+      const cleanedReply = getKrishnaNarrationText(expandedReply);
+      if (cleanedReply.length > writtenReply.length) {
+        setKrishnaVoiceScripts((current) => ({ ...current, [message.id]: cleanedReply }));
+        return cleanedReply;
+      }
+    } catch (error) {
+      console.warn("Krishna extended narration unavailable; using written reply.", error);
+    }
+
+    return writtenReply;
+  };
+
+  const releaseKrishnaVoiceAudio = () => {
+    const audio = krishnaVoiceAudioRef.current;
+    if (audio) {
+      audio.onplay = null;
+      audio.onpause = null;
+      audio.onended = null;
+      audio.onerror = null;
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    }
+    krishnaVoiceAudioRef.current = null;
+    if (krishnaVoiceAudioUrlRef.current) {
+      URL.revokeObjectURL(krishnaVoiceAudioUrlRef.current);
+      krishnaVoiceAudioUrlRef.current = null;
+    }
+  };
+
+  const stopKrishnaVoice = () => {
+    krishnaVoiceMessageRef.current = null;
+    releaseKrishnaVoiceAudio();
+    setKrishnaVoice({ messageId: null, status: "idle" });
+  };
+
+  const speakKrishnaMessage = async (message: KrishnaMessage) => {
+    krishnaVoiceMessageRef.current = message.id;
+    setKrishnaVoice({ messageId: message.id, status: "loading" });
+    const narration = await prepareKrishnaNarration(message);
+    if (krishnaVoiceMessageRef.current !== message.id) return;
+    if (!narration) return;
+
+    releaseKrishnaVoiceAudio();
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: narration }),
+      });
+
+      if (!response.ok) {
+        let message = "Free neural voice could not be generated. Try again.";
+        try {
+          const details = await response.json();
+          if (typeof details?.error === "string") message = details.error;
+        } catch {
+          // Keep the friendly fallback message when the response is not JSON.
+        }
+        throw new Error(message);
+      }
+
+      const audioUrl = URL.createObjectURL(await response.blob());
+      if (krishnaVoiceMessageRef.current !== message.id) {
+        URL.revokeObjectURL(audioUrl);
+        return;
+      }
+
+      const audio = new Audio(audioUrl);
+      audio.preload = "auto";
+      audio.volume = 0.95;
+      krishnaVoiceAudioRef.current = audio;
+      krishnaVoiceAudioUrlRef.current = audioUrl;
+
+      audio.onplay = () => {
+        if (krishnaVoiceMessageRef.current === message.id) {
+          setKrishnaVoice({ messageId: message.id, status: "playing" });
+        }
+      };
+      audio.onpause = () => {
+        if (
+          krishnaVoiceMessageRef.current === message.id &&
+          !audio.ended &&
+          audio.currentTime > 0
+        ) {
+          setKrishnaVoice({ messageId: message.id, status: "paused" });
+        }
+      };
+      audio.onended = () => {
+        if (krishnaVoiceMessageRef.current === message.id) {
+          krishnaVoiceMessageRef.current = null;
+          releaseKrishnaVoiceAudio();
+          setKrishnaVoice({ messageId: null, status: "idle" });
+        }
+      };
+      audio.onerror = () => {
+        if (krishnaVoiceMessageRef.current !== message.id) return;
+        krishnaVoiceMessageRef.current = null;
+        releaseKrishnaVoiceAudio();
+        setKrishnaVoice({
+          messageId: message.id,
+          status: "error",
+          error: "Free neural voice audio could not play. Try again.",
+        });
+      };
+
+      await audio.play();
+      if (krishnaVoiceMessageRef.current === message.id) {
+        setKrishnaVoice({ messageId: message.id, status: "playing" });
+      }
+    } catch (error) {
+      if (krishnaVoiceMessageRef.current !== message.id) return;
+      krishnaVoiceMessageRef.current = null;
+      releaseKrishnaVoiceAudio();
+      setKrishnaVoice({
+        messageId: message.id,
+        status: "error",
+        error: error instanceof Error ? error.message : "Free neural voice could not start. Try again.",
+      });
+    }
+  };
+
+  const toggleKrishnaVoice = (message: KrishnaMessage) => {
+    if (krishnaVoice.messageId !== message.id || krishnaVoice.status === "idle" || krishnaVoice.status === "error") {
+      speakKrishnaMessage(message);
+      return;
+    }
+    if (krishnaVoice.status === "loading") {
+      stopKrishnaVoice();
+      return;
+    }
+    const audio = krishnaVoiceAudioRef.current;
+    if (!audio) return;
+    if (krishnaVoice.status === "playing") {
+      audio.pause();
+      setKrishnaVoice((current) => ({ ...current, status: "paused" }));
+    } else if (krishnaVoice.status === "paused") {
+      audio.play().then(
+        () => setKrishnaVoice((current) => ({ ...current, status: "playing" })),
+        () =>
+          setKrishnaVoice({
+            messageId: message.id,
+            status: "error",
+            error: "Free neural voice could not resume. Try again.",
+          }),
+      );
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      krishnaVoiceMessageRef.current = null;
+      releaseKrishnaVoiceAudio();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (appMode !== "krishna" && krishnaVoiceMessageRef.current) {
+      stopKrishnaVoice();
+    }
+  }, [appMode]);
+
   // ==========================================
   // RENDER: MY KRISHNA DIVINE OS
   // ==========================================
@@ -3346,6 +3683,92 @@ CORE MANNERISMS & ESSENCE:
                       <div className="whitespace-pre-wrap font-sans text-xs sm:text-sm space-y-2">
                         {msg.text}
                       </div>
+
+                      {/* Krishna response timestamp */}
+                      {!isUser && (
+                        <div className="text-right text-[8px] opacity-60 font-mono mt-2 text-amber-200/60">
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+
+                      {!isUser && (
+                        <div className="krishna-voice-reply mt-4" data-testid={`voice-reply-${msg.id}`}>
+                          <div className="krishna-voice-heading">
+                            <span className="flex items-center gap-1.5">
+                              <Volume2 size={13} />
+                              <span>Voice reply</span>
+                            </span>
+                            <span className="krishna-voice-note">Free neural voice</span>
+                          </div>
+
+                          {krishnaVoice.messageId === msg.id && krishnaVoice.status === "error" ? (
+                            <div className="krishna-voice-error" role="status" data-testid={`voice-error-${msg.id}`}>
+                              <span>{krishnaVoice.error || "Voice playback could not start."}</span>
+                              <button
+                                type="button"
+                                onClick={() => speakKrishnaMessage(msg)}
+                                className="krishna-voice-retry"
+                                data-testid={`button-retry-voice-${msg.id}`}
+                              >
+                                <RotateCcw size={13} />
+                                <span>Retry</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="krishna-voice-controls">
+                              <button
+                                type="button"
+                                onClick={() => toggleKrishnaVoice(msg)}
+                                className="krishna-voice-primary"
+                                data-testid={`button-play-voice-${msg.id}`}
+                                aria-label={
+                                  krishnaVoice.messageId === msg.id && krishnaVoice.status === "playing"
+                                    ? "Pause voice reply"
+                                    : krishnaVoice.messageId === msg.id && krishnaVoice.status === "paused"
+                                      ? "Resume voice reply"
+                                      : "Play voice reply"
+                                }
+                              >
+                                {krishnaVoice.messageId === msg.id && krishnaVoice.status === "loading" ? (
+                                  <span className="krishna-voice-loading-bars" aria-hidden="true">
+                                    <i></i><i></i><i></i>
+                                  </span>
+                                ) : krishnaVoice.messageId === msg.id && krishnaVoice.status === "playing" ? (
+                                  <Pause size={14} />
+                                ) : (
+                                  <Play size={14} />
+                                )}
+                                <span>
+                                  {krishnaVoice.messageId === msg.id && krishnaVoice.status === "loading"
+                                    ? "Preparing"
+                                    : krishnaVoice.messageId === msg.id && krishnaVoice.status === "playing"
+                                      ? "Pause"
+                                      : krishnaVoice.messageId === msg.id && krishnaVoice.status === "paused"
+                                        ? "Resume"
+                                        : "Listen"}
+                                </span>
+                              </button>
+                              {krishnaVoice.messageId === msg.id &&
+                                ["loading", "playing", "paused"].includes(krishnaVoice.status) && (
+                                  <button
+                                    type="button"
+                                    onClick={stopKrishnaVoice}
+                                    className="krishna-voice-stop"
+                                    data-testid={`button-stop-voice-${msg.id}`}
+                                  >
+                                    <Square size={12} />
+                                    <span>Stop</span>
+                                  </button>
+                                )}
+                              <span className="krishna-voice-secondary-copy">
+                                {krishnaVoice.messageId === msg.id && krishnaVoice.status === "paused"
+                                  ? "Paused"
+                                  : "Written guidance remains primary"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* User timestamp */}
                       {isUser && (
