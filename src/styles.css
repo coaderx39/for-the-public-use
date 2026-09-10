@@ -1,0 +1,885 @@
+/* ==========================================
+   Android & Mobile Viewport & Touch Reset
+   ========================================== */
+html, body, #root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* Safe area padding utilities */
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+}
+.pt-safe {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+}
+
+/* Touch & tap responsiveness */
+button, input, select, textarea, a {
+  touch-action: manipulation;
+}
+
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(18, 18, 18, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Tactile Micro-Interactions */
+.tap-effect {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tap-effect:active {
+  transform: scale(0.96);
+}
+
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+/* Shimmer & Glow Animations */
+@keyframes shimmerAnim {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 100%
+  );
+  animation: shimmerAnim 2.5s infinite;
+}
+
+/* Floating Animation */
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-float {
+  animation: floatSoft 3s ease-in-out infinite;
+}
+
+/* Pulsing Radial Glow */
+@keyframes pulseGlowGold {
+  0%, 100% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.2), inset 0 0 10px rgba(250, 204, 21, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.5), inset 0 0 15px rgba(250, 204, 21, 0.2); }
+}
+
+.glow-gold-pulse {
+  animation: pulseGlowGold 2.5s infinite;
+}
+
+/* Typing Dots Animation */
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.typing-dot-1 {
+  animation: dotPulse 1.4s infinite ease-in-out;
+}
+.typing-dot-2 {
+  animation: dotPulse 1.4s infinite ease-in-out 0.2s;
+}
+.typing-dot-3 {
+  animation: dotPulse 1.4s infinite ease-in-out 0.4s;
+}
+
+/* Smooth Focus Rings */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* Rank Progression & Celebration Animations */
+@keyframes scalePop {
+  0% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  80% { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.animate-scale-pop {
+  animation: scalePop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 12s linear infinite;
+}
+
+@keyframes spinReverseSlow {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-spin-reverse-slow {
+  animation: spinReverseSlow 16s linear infinite;
+}
+
+@keyframes confettiDrift {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(120px) rotate(360deg); opacity: 0; }
+}
+
+.animate-confetti {
+  animation: confettiDrift 3.5s ease-in-out infinite;
+}
+
+@keyframes warningShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.animate-warning-shake {
+  animation: warningShake 0.6s ease-in-out;
+}
+
+/* Mobile Bottom Sheet & Dialog Enhancements */
+.mobile-bottom-sheet {
+  border-top-left-radius: 1.75rem;
+  border-top-right-radius: 1.75rem;
+  max-height: 90vh;
+  max-height: 90dvh;
+}
+
+@media (min-width: 640px) {
+  .mobile-bottom-sheet {
+    border-radius: 1.75rem;
+    max-height: 88vh;
+  }
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.25);
+  margin: 0.5rem auto 1rem auto;
+}
+
+/* Dynamic Viewport Height Helpers */
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.min-h-screen-safe {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Mobile Friendly Grid & Gutter Utilities */
+.mobile-container {
+  width: 100%;
+  max-width: 100%;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .mobile-container {
+    max-width: 42rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-container {
+    max-width: 56rem;
+  }
+}
+
+/* Active Touch Response for All Buttons */
+button:active {
+  transform: scale(0.97);
+}
+
+.no-scale-active:active {
+  transform: none;
+}
+
+/* ==========================================
+   Real Mobile Push Notification & Heads-Up Banner
+   ========================================== */
+@keyframes mobileNotificationDrop {
+  0% {
+    transform: translate(-50%, -120%) scale(0.88);
+    opacity: 0;
+  }
+  65% {
+    transform: translate(-50%, 6px) scale(1.02);
+    opacity: 1;
+  }
+  85% {
+    transform: translate(-50%, -2px) scale(0.99);
+  }
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-mobile-notification {
+  animation: mobileNotificationDrop 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes toastProgress {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+/* ==========================================
+   Tiered RPG Rank VFX Animations (Tiers 1 to 15)
+   ========================================== */
+@keyframes solarRaysSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.12); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.animate-solar-rays {
+  animation: solarRaysSpin 14s linear infinite;
+}
+
+@keyframes mandalaBloomSpin {
+  0% { transform: rotate(0deg) scale(0.92); opacity: 0.7; }
+  50% { transform: rotate(180deg) scale(1.08); opacity: 1; }
+  100% { transform: rotate(360deg) scale(0.92); opacity: 0.7; }
+}
+.animate-mandala-bloom {
+  animation: mandalaBloomSpin 18s ease-in-out infinite;
+}
+
+@keyframes celestialRayPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.95); }
+  50% { opacity: 0.9; transform: scale(1.15); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.8)); }
+}
+.animate-celestial-rays {
+  animation: celestialRayPulse 3.5s ease-in-out infinite;
+}
+
+@keyframes shockwaveExpand {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.animate-shockwave-1 {
+  animation: shockwaveExpand 2.2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+}
+.animate-shockwave-2 {
+  animation: shockwaveExpand 2.2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite 0.75s;
+}
+.animate-shockwave-3 {
+  animation: shockwaveExpand 2.2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite 1.5s;
+}
+
+@keyframes flameRise {
+  0% { transform: translateY(10px) scale(0.8) rotate(-4deg); opacity: 0; }
+  30% { opacity: 0.9; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(-45px) scale(1.3) rotate(4deg); opacity: 0; }
+}
+.animate-flame-1 {
+  animation: flameRise 1.8s ease-out infinite;
+}
+.animate-flame-2 {
+  animation: flameRise 2.2s ease-out infinite 0.4s;
+}
+.animate-flame-3 {
+  animation: flameRise 1.6s ease-out infinite 0.9s;
+}
+
+@keyframes hyperFlash {
+  0% { opacity: 0; }
+  15% { opacity: 0.85; }
+  35% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+.animate-hyper-flash {
+  animation: hyperFlash 1.2s ease-out forwards;
+}
+
+@keyframes auraPulseDivine {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(245, 158, 11, 0.3);
+    border-color: rgba(251, 191, 36, 0.8);
+  }
+  33% {
+    box-shadow: 0 0 50px rgba(168, 85, 247, 0.6), inset 0 0 30px rgba(168, 85, 247, 0.4);
+    border-color: rgba(192, 132, 252, 0.9);
+  }
+  66% {
+    box-shadow: 0 0 60px rgba(56, 189, 248, 0.6), inset 0 0 35px rgba(56, 189, 248, 0.4);
+    border-color: rgba(56, 189, 248, 0.9);
+  }
+}
+.animate-divine-aura {
+  animation: auraPulseDivine 4s ease-in-out infinite;
+}
+
+@keyframes floatGlyph {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+  50% { transform: translateY(-12px) rotate(8deg); opacity: 0.9; }
+  100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+}
+.animate-float-glyph-1 {
+  animation: floatGlyph 4s ease-in-out infinite;
+}
+.animate-float-glyph-2 {
+  animation: floatGlyph 4.8s ease-in-out infinite 1.2s;
+}
+.animate-float-glyph-3 {
+  animation: floatGlyph 5.4s ease-in-out infinite 2.4s;
+}
+
+/* =========================================================
+   DUOLINGO-STYLE FLUID SPRING PHYSICS & CHARACTER MASCOT ENGINE
+   ========================================================= */
+
+/* Sleek Smooth Modal Entrance */
+@keyframes modalSleekFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.animate-modal-sleek {
+  animation: modalSleekFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Spring Pop-In (Duolingo Style Modals & Rewards) */
+@keyframes springPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.65) translateY(40px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.06) translateY(-6px);
+  }
+  80% {
+    transform: scale(0.97) translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.animate-spring-in {
+  animation: springPopIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Bottom Slide-Up Drawer for Mascot & Notifications */
+@keyframes drawerSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-drawer-slide-up {
+  animation: drawerSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* SVG Fluid Checkmark Draw-In */
+@keyframes checkmarkDraw {
+  0% {
+    stroke-dashoffset: 48;
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-check-draw {
+  stroke-dasharray: 48;
+  animation: checkmarkDraw 0.42s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* Tactile Habit Button Press Physics */
+.btn-tactile-press {
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s ease;
+}
+.btn-tactile-press:active {
+  transform: scale(0.93) translateY(2px);
+}
+
+/* Dynamic Flowing SVG Streak Fire Wave */
+@keyframes fireWaveOscillate {
+  0% {
+    transform: scaleY(1) scaleX(1) rotate(-1.5deg);
+    filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.7));
+  }
+  30% {
+    transform: scaleY(1.08) scaleX(0.96) rotate(2deg);
+    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.85)) drop-shadow(0 0 30px rgba(245, 158, 11, 0.5));
+  }
+  60% {
+    transform: scaleY(0.96) scaleX(1.04) rotate(-2deg);
+    filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.8));
+  }
+  100% {
+    transform: scaleY(1) scaleX(1) rotate(-1.5deg);
+    filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.7));
+  }
+}
+.animate-fire-wave {
+  animation: fireWaveOscillate 1.8s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Inner Core Flame Flutter */
+@keyframes flameCoreFlutter {
+  0%, 100% {
+    transform: scale(0.95) translateY(0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.1) translateY(-2px);
+    opacity: 1;
+  }
+}
+.animate-flame-core {
+  animation: flameCoreFlutter 1.1s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Ember Spark Rise */
+@keyframes emberRise {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx, 8px), -36px) scale(0);
+    opacity: 0;
+  }
+}
+.animate-ember-1 {
+  --tx: 10px;
+  animation: emberRise 1.4s ease-out infinite;
+}
+.animate-ember-2 {
+  --tx: -12px;
+  animation: emberRise 1.8s ease-out infinite 0.4s;
+}
+.animate-ember-3 {
+  --tx: 6px;
+  animation: emberRise 1.2s ease-out infinite 0.8s;
+}
+
+/* =========================================================
+   CHARACTER MASCOT: SAGE BOT / ZENITH EMOTIONAL STATES
+   ========================================================= */
+
+/* Mascot State 1: Happy Bounce (Habit Complete / Streak Keep) */
+@keyframes mascotHappyBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  20% {
+    transform: translateY(4px) scale(1.08, 0.92);
+  }
+  45% {
+    transform: translateY(-24px) scale(0.92, 1.08) rotate(4deg);
+  }
+  65% {
+    transform: translateY(-8px) scale(1.04, 0.96) rotate(-2deg);
+  }
+  85% {
+    transform: translateY(0) scale(0.98, 1.02);
+  }
+}
+.animate-mascot-happy {
+  animation: mascotHappyBounce 1.2s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  transform-origin: bottom center;
+}
+
+/* Mascot State 2: Sad Droop & Warm Breathing (Missed Day / Streak at Risk) */
+@keyframes mascotSadDroop {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  30% {
+    transform: translateY(8px) rotate(-3deg) scale(0.97, 1.02);
+  }
+  70% {
+    transform: translateY(4px) rotate(2deg) scale(1.01, 0.98);
+  }
+}
+.animate-mascot-sad {
+  animation: mascotSadDroop 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Tear Drop Particle */
+@keyframes tearFall {
+  0% {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.5);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(18px) scale(1);
+  }
+}
+.animate-mascot-tear {
+  animation: tearFall 1.8s ease-in infinite;
+}
+
+/* Mascot State 3: Victory Leap (Perfect Day / Rank Promotion) */
+@keyframes mascotVictoryLeap {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  15% {
+    transform: translateY(6px) scale(1.12, 0.88);
+  }
+  35% {
+    transform: translateY(-34px) scale(0.88, 1.15) rotate(8deg);
+  }
+  50% {
+    transform: translateY(-28px) scale(1.05, 0.95) rotate(-6deg);
+  }
+  70% {
+    transform: translateY(-10px) scale(0.98, 1.02) rotate(2deg);
+  }
+}
+.animate-mascot-victory {
+  animation: mascotVictoryLeap 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  transform-origin: bottom center;
+}
+
+/* Mascot State 4: Combat Stance (PvP Arena Battling) */
+@keyframes mascotCombatStance {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(-1deg);
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));
+  }
+  50% {
+    transform: translateY(-6px) scale(1.04) rotate(2deg);
+    filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.9)) drop-shadow(0 0 30px rgba(239, 68, 68, 0.7));
+  }
+}
+.animate-mascot-combat {
+  animation: mascotCombatStance 0.85s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Mascot State 5: Idle Float (Peaceful Zen Orbit) */
+@keyframes mascotIdleFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+.animate-mascot-idle {
+  animation: mascotIdleFloat 3.2s ease-in-out infinite;
+}
+
+/* Orbiting Sparkles around Mascot */
+@keyframes starOrbit {
+  0% {
+    transform: rotate(0deg) translateX(36px) rotate(0deg) scale(0.7);
+    opacity: 0.3;
+  }
+  50% {
+    transform: rotate(180deg) translateX(36px) rotate(-180deg) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) translateX(36px) rotate(-360deg) scale(0.7);
+    opacity: 0.3;
+  }
+}
+.animate-star-orbit-1 {
+  animation: starOrbit 3s linear infinite;
+}
+.animate-star-orbit-2 {
+  animation: starOrbit 3s linear infinite -1.5s;
+}
+
+/* Speech Bubble Pop-In */
+@keyframes speechBubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(10px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.05) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.animate-speech-bubble {
+  animation: speechBubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* =========================================================
+   1v1 PVP DISCIPLINE BATTLE ARENA COMBAT VFX
+   ========================================================= */
+
+/* Combat Floating Damage Number (-100 HP!) */
+@keyframes floatDamageNumber {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.35) translateY(-14px);
+  }
+  45% {
+    transform: scale(1.1) translateY(-28px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.85) translateY(-54px);
+  }
+}
+.animate-combat-damage {
+  animation: floatDamageNumber 1.1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+/* Critical Strike Floating Number (CRIT! 250) */
+@keyframes floatCritNumber {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg) translateY(0);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.55) rotate(6deg) translateY(-18px);
+  }
+  50% {
+    transform: scale(1.2) rotate(-3deg) translateY(-36px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) rotate(0deg) translateY(-68px);
+  }
+}
+.animate-combat-crit {
+  animation: floatCritNumber 1.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+/* Shield Absorb Floating Number (+150 SHIELD!) */
+@keyframes floatShieldNumber {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.25) translateY(-16px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-48px);
+  }
+}
+.animate-combat-shield {
+  animation: floatShieldNumber 1.1s ease-out forwards;
+}
+
+/* Sword Slash Impact VFX Beam */
+@keyframes slashBeam {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.1) rotate(-35deg);
+  }
+  30% {
+    opacity: 1;
+    transform: scaleX(1.4) rotate(-35deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1.8) rotate(-35deg) translate(30px, 30px);
+  }
+}
+.animate-slash-beam {
+  animation: slashBeam 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Screen Shake on Critical Hit */
+@keyframes combatShake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px) translateY(2px); }
+  30% { transform: translateX(6px) translateY(-3px); }
+  45% { transform: translateX(-4px) translateY(1px); }
+  60% { transform: translateX(4px) translateY(-1px); }
+  75% { transform: translateX(-2px); }
+}
+.animate-combat-shake {
+  animation: combatShake 0.45s ease-in-out;
+}
+
+/* HP Bar Delayed Damage Trail (Fighting Game Style) */
+.hp-bar-trail {
+  transition: width 0.75s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.hp-bar-instant {
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Taunt Banner Pop & Slide */
+@keyframes tauntSlideBanner {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.9);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1.04);
+  }
+  30% {
+    transform: translateY(0) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+.animate-taunt-banner {
+  animation: tauntSlideBanner 2.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Arena Radiant Ring Pulse */
+@keyframes arenaRingPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 15px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(239, 68, 68, 0.7), inset 0 0 30px rgba(245, 158, 11, 0.4);
+  }
+}
+.animate-arena-ring {
+  animation: arenaRingPulse 2.4s ease-in-out infinite;
+}
+
+
+
+
+
